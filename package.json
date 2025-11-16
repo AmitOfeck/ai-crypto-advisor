@@ -1,0 +1,27 @@
+{
+  "name": "ai-crypto-advisor",
+  "version": "1.0.0",
+  "description": "AI Crypto Advisor Dashboard - Monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "keywords": [
+    "crypto",
+    "dashboard",
+    "ai",
+    "advisor"
+  ],
+  "author": "",
+  "license": "ISC"
+}
+
