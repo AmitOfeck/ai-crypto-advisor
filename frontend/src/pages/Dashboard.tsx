@@ -1,0 +1,306 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { dashboardAPI, onboardingAPI } from '../utils/apiService';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import FeedbackButtons from '../components/FeedbackButtons';
+
+interface CoinPrice {
+  id: string;
+  symbol: string;
+  name: string;
+  current_price: number;
+  price_change_percentage_24h: number;
+  market_cap: number;
+  image: string;
+}
+
+interface NewsItem {
+  id: string;
+  title: string;
+  url: string;
+  published_at: string;
+  source: { title: string; region: string };
+  currencies?: Array<{ code: string; title: string }>;
+}
+
+interface AIInsight {
+  id: string;
+  content: string;
+  generatedAt: string;
+  model?: string;
+}
+
+interface MemeItem {
+  id: string;
+  title: string;
+  imageUrl: string;
+  source: string;
+}
+
+const Dashboard: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [dashboardData, setDashboardData] = useState<{
+    coinPrices: CoinPrice[];
+    marketNews: NewsItem[];
+    aiInsight: AIInsight;
+    meme: MemeItem;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        // Check onboarding status
+        const statusResponse = await onboardingAPI.getStatus();
+        if (!statusResponse.completed) {
+          navigate('/onboarding');
+          return;
+        }
+
+        // Load dashboard data
+        const response = await dashboardAPI.getDashboard();
+        setDashboardData(response);
+      } catch (err: any) {
+        setError(err.response?.data?.error || 'Failed to load dashboard');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadDashboard();
+  }, [navigate]);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price);
+  };
+
+  const formatMarketCap = (cap: number) => {
+    if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
+    if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
+    if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
+    return `$${cap.toLocaleString()}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <Card>
+          <div className="text-center">
+            <p className="text-red-400 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!dashboardData) return null;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Header */}
+      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            AI Crypto Advisor
+          </h1>
+          <div className="flex items-center gap-4">
+            <span className="text-slate-300">Welcome, {user?.name}</span>
+            <Button variant="ghost" size="sm" onClick={logout}>
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* AI Insight Section */}
+        <Card
+          title="AI Insight of the Day"
+          headerAction={
+            dashboardData.aiInsight && (
+              <FeedbackButtons
+                feedbackType="ai_insight"
+                itemId={dashboardData.aiInsight.id}
+              />
+            )
+          }
+        >
+          {dashboardData.aiInsight && (
+            <div className="space-y-4">
+              <p className="text-slate-200 text-lg leading-relaxed">
+                {dashboardData.aiInsight.content}
+              </p>
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <span>Generated by {dashboardData.aiInsight.model || 'AI'}</span>
+                <span>•</span>
+                <span>{formatDate(dashboardData.aiInsight.generatedAt)}</span>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Coin Prices Section */}
+          <Card
+            title="Coin Prices"
+            headerAction={
+              dashboardData.coinPrices.length > 0 && (
+                <FeedbackButtons
+                  feedbackType="coin_prices"
+                  itemId="coin-prices-section"
+                />
+              )
+            }
+          >
+            <div className="space-y-4">
+              {dashboardData.coinPrices.map((coin) => (
+                <div
+                  key={coin.id}
+                  className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={coin.image}
+                      alt={coin.name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <h4 className="font-semibold text-slate-100">
+                        {coin.name}
+                      </h4>
+                      <p className="text-sm text-slate-400">{coin.symbol}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-slate-100">
+                      {formatPrice(coin.current_price)}
+                    </p>
+                    <p
+                      className={`text-sm ${
+                        coin.price_change_percentage_24h >= 0
+                          ? 'text-green-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {coin.price_change_percentage_24h >= 0 ? '+' : ''}
+                      {coin.price_change_percentage_24h.toFixed(2)}%
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {formatMarketCap(coin.market_cap)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Market News Section */}
+          <Card
+            title="Market News"
+            headerAction={
+              dashboardData.marketNews.length > 0 && (
+                <FeedbackButtons
+                  feedbackType="market_news"
+                  itemId="market-news-section"
+                />
+              )
+            }
+          >
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {dashboardData.marketNews.map((news) => (
+                <a
+                  key={news.id}
+                  href={news.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block p-4 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors group"
+                >
+                  <h4 className="font-semibold text-slate-100 group-hover:text-indigo-400 transition-colors mb-2">
+                    {news.title}
+                  </h4>
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <span>{news.source.title}</span>
+                    <span>•</span>
+                    <span>{formatDate(news.published_at)}</span>
+                  </div>
+                  {news.currencies && news.currencies.length > 0 && (
+                    <div className="flex gap-2 mt-2">
+                      {news.currencies.map((curr) => (
+                        <span
+                          key={curr.code}
+                          className="px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded text-xs"
+                        >
+                          {curr.code}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </a>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Meme Section */}
+        {dashboardData.meme && (
+          <Card
+            title="Fun Crypto Meme"
+            headerAction={
+              <FeedbackButtons
+                feedbackType="meme"
+                itemId={dashboardData.meme.id}
+              />
+            }
+          >
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-semibold text-slate-100">
+                {dashboardData.meme.title}
+              </h3>
+              <div className="bg-slate-700/50 rounded-lg p-4">
+                <img
+                  src={dashboardData.meme.imageUrl}
+                  alt={dashboardData.meme.title}
+                  className="max-w-full h-auto rounded-lg mx-auto"
+                />
+              </div>
+              <p className="text-sm text-slate-400">
+                Source: {dashboardData.meme.source}
+              </p>
+            </div>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
+
