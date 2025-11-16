@@ -2,8 +2,6 @@ import { Request, Response } from 'express';
 import { CreateUserData, LoginCredentials } from '../models/UserTypes';
 import { createUser, validateUser } from '../services/authService';
 
-// TODO: Add input validation
-// TODO: Add error handling
 // TODO: Add JWT token generation
 export const signup = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -13,8 +11,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       password: req.body.password,
     };
 
-    // TODO: Validate input data
-    // TODO: Check if user already exists
+    // Input validation is handled by middleware
     const newUser = await createUser(userData);
 
     // TODO: Generate JWT token
@@ -39,8 +36,6 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// TODO: Add input validation
-// TODO: Add error handling
 // TODO: Add JWT token generation
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -49,7 +44,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       password: req.body.password,
     };
 
-    // TODO: Validate input data
+    // Input validation is handled by middleware
     const user = await validateUser(credentials);
 
     if (!user) {
