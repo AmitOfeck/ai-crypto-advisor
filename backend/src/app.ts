@@ -1,4 +1,5 @@
 import express, { Express } from 'express';
+import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
@@ -7,6 +8,15 @@ import feedbackRoutes from './routes/feedbackRoutes';
 
 // Express app setup
 const app: Express = express();
+
+// CORS middleware - allow requests from frontend
+// Handle preflight OPTIONS requests properly
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // JSON middleware
 app.use(express.json());

@@ -5,27 +5,5 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    proxy: {
-      '/auth': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-      },
-      '/onboarding': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-      },
-      '/dashboard': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-      },
-      '/feedback': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-      },
-      '/user': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-      },
-    },
   },
 })

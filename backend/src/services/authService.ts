@@ -15,19 +15,25 @@ const toUser = (doc: IUser): User => ({
 // TODO: Add email validation
 // TODO: Add duplicate email error handling
 export const createUser = async (userData: CreateUserData): Promise<User> => {
-  // Hash password before saving
-  const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+  try {
+    // Hash password before saving
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
-  // Create new user in database with hashed password
-  const newUser = new UserModel({
-    name: userData.name,
-    email: userData.email,
-    password: hashedPassword,
-  });
+    // Create new user in database with hashed password
+    const newUser = new UserModel({
+      name: userData.name,
+      email: userData.email,
+      password: hashedPassword,
+    });
 
-  await newUser.save();
-  return toUser(newUser);
+    const savedUser = await newUser.save();
+    console.log('User saved successfully:', { id: savedUser._id, email: savedUser.email });
+    return toUser(savedUser);
+  } catch (error: any) {
+    console.error('Error creating user:', error);
+    throw error; // Re-throw to be handled by controller
+  }
 };
 
 // TODO: Add proper error handling for database queries

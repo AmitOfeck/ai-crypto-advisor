@@ -35,9 +35,18 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       res.status(409).json({ error: 'Email already exists' });
       return;
     }
-    // TODO: Add proper error handling for other errors
+    // Log full error for debugging
     console.error('Signup error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack,
+    });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
   }
 };
 
