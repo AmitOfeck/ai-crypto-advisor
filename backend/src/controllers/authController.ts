@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { CreateUserData, LoginCredentials } from '../models/UserTypes';
 import { createUser, validateUser } from '../services/authService';
+import { generateToken } from '../services/jwtService';
 
-// TODO: Add JWT token generation
 export const signup = async (req: Request, res: Response): Promise<void> => {
   try {
     const userData: CreateUserData = {
@@ -14,10 +14,15 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     // Input validation is handled by middleware
     const newUser = await createUser(userData);
 
-    // TODO: Generate JWT token
-    // TODO: Return token to client
+    // Generate JWT token
+    const token = generateToken({
+      userId: newUser.id,
+      email: newUser.email,
+    });
+
     res.status(201).json({
       message: 'User created successfully',
+      token,
       user: {
         id: newUser.id,
         name: newUser.name,
@@ -36,7 +41,6 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// TODO: Add JWT token generation
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const credentials: LoginCredentials = {
@@ -52,10 +56,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // TODO: Generate JWT token
-    // TODO: Return token to client
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+    });
+
     res.status(200).json({
       message: 'Login successful',
+      token,
       user: {
         id: user.id,
         name: user.name,
