@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // OpenRouter API configuration (free tier available)
 const OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1';
-const HUGGINGFACE_API_BASE = 'https://api-inference.huggingface.co/models';
+// HuggingFace Inference API (using router endpoint compatible with OpenAI format)
+const HUGGINGFACE_API_BASE = 'https://router.huggingface.co/v1';
 
 export interface AIInsight {
   id: string;
@@ -12,8 +13,8 @@ export interface AIInsight {
 }
 
 /**
- * Get AI insight using OpenRouter (free tier)
- * Falls back to HuggingFace if OpenRouter fails, then to static fallback
+ * Get AI insight using OpenRouter and HuggingFace
+ * Tries OpenRouter first, then HuggingFace, then fallback
  */
 export const getAIInsight = async (userPreferences?: {
   interestedAssets?: string[];
@@ -26,41 +27,32 @@ export const getAIInsight = async (userPreferences?: {
       return await getOpenRouterInsight(userPreferences);
     } catch (error: any) {
       // Log specific error type for debugging
-      if (error.message?.includes('rate limit')) {
-        console.warn('OpenRouter rate limit exceeded, trying HuggingFace...');
+      if (error.message?.includes('rate limit') || error.response?.status === 429) {
+        console.warn('OpenRouter rate limited. Trying HuggingFace...');
       } else {
-        console.warn('OpenRouter failed, trying HuggingFace:', error.message || error);
+        console.warn('OpenRouter failed:', error.message || error);
       }
+      // Continue to HuggingFace fallback
     }
-  } else {
-    console.log('OpenRouter API key not configured, trying HuggingFace...');
   }
 
-  // Fallback to HuggingFace if OpenRouter fails or not configured
+  // Fallback to HuggingFace if OpenRouter fails AND key is configured
   const huggingFaceKey = process.env.HUGGINGFACE_API_KEY;
   if (huggingFaceKey && huggingFaceKey !== 'your-huggingface-api-key-here') {
     try {
       return await getHuggingFaceInsight(userPreferences);
-    } catch (error) {
-      console.warn('HuggingFace failed, using fallback:', error);
+    } catch (error: any) {
+      console.warn('HuggingFace failed:', error.message || error);
     }
-  } else {
-    console.log('HuggingFace API key not configured, using fallback insight...');
   }
 
-  // Final fallback to static insight
-  return getFallbackInsight();
+  // Final fallback to personalized static insight (only if both APIs fail)
+  console.warn('Both OpenRouter and HuggingFace failed. Using fallback.');
+  return getFallbackInsight(userPreferences);
 };
 
 /**
- * Sleep helper for retry delays
- */
-const sleep = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
-
-/**
- * Get AI insight from OpenRouter with retry logic for rate limits
+ * Get AI insight from OpenRouter (fast - no retries for rate limits)
  */
 const getOpenRouterInsight = async (userPreferences?: {
   interestedAssets?: string[];
@@ -77,69 +69,48 @@ const getOpenRouterInsight = async (userPreferences?: {
 
   const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}. Make it actionable and relevant to today's market.`;
 
-  const maxRetries = 3;
-  let lastError: any;
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await axios.post(
-        `${OPENROUTER_API_BASE}/chat/completions`,
-        {
-          model: 'meta-llama/llama-3.2-3b-instruct:free', // Free model
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          max_tokens: 150,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
+  try {
+    const response = await axios.post(
+      `${OPENROUTER_API_BASE}/chat/completions`,
+      {
+        model: 'meta-llama/llama-3.2-3b-instruct:free', // Free model
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
           },
-        }
-      );
-
-      const content = response.data.choices[0]?.message?.content || 'Unable to generate insight.';
-
-      return {
-        id: `insight-${Date.now()}`,
-        content,
-        generatedAt: new Date().toISOString(),
-        model: 'OpenRouter (Llama 3.2)',
-      };
-    } catch (error: any) {
-      lastError = error;
-      
-      // Check if it's a rate limit error (429)
-      if (error.response?.status === 429) {
-        const retryAfter = error.response?.headers['retry-after'] 
-          ? parseInt(error.response.headers['retry-after']) * 1000 
-          : Math.pow(2, attempt) * 1000; // Exponential backoff: 1s, 2s, 4s
-        
-        if (attempt < maxRetries - 1) {
-          console.log(`OpenRouter rate limited (429). Retrying in ${retryAfter}ms... (attempt ${attempt + 1}/${maxRetries})`);
-          await sleep(retryAfter);
-          continue; // Retry
-        } else {
-          console.error('OpenRouter rate limit exceeded after all retries');
-          throw new Error('OpenRouter rate limit exceeded. Please try again in a few moments.');
-        }
+        ],
+        max_tokens: 150,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
       }
-      
-      // For other errors, throw immediately
-      throw error;
-    }
-  }
+    );
 
-  // Should never reach here, but TypeScript needs it
-  throw lastError || new Error('Failed to get OpenRouter insight');
+    const content = response.data.choices[0]?.message?.content || 'Unable to generate insight.';
+
+    return {
+      id: `insight-${Date.now()}`,
+      content,
+      generatedAt: new Date().toISOString(),
+      model: 'OpenRouter (Llama 3.2)',
+    };
+  } catch (error: any) {
+    // If rate limited, throw immediately for fast fallback (no retries)
+    if (error.response?.status === 429) {
+      console.warn('OpenRouter rate limited (429). Falling back immediately.');
+      throw new Error('OpenRouter rate limit exceeded');
+    }
+    // For other errors, throw immediately
+    throw error;
+  }
 };
 
 /**
- * Get AI insight from HuggingFace (free tier)
+ * Get AI insight from HuggingFace (using router endpoint with OpenAI-compatible format)
  */
 const getHuggingFaceInsight = async (userPreferences?: {
   interestedAssets?: string[];
@@ -147,51 +118,97 @@ const getHuggingFaceInsight = async (userPreferences?: {
 }): Promise<AIInsight> => {
   const apiKey = process.env.HUGGINGFACE_API_KEY;
   
+  if (!apiKey || apiKey === 'your-huggingface-api-key-here') {
+    throw new Error('HuggingFace API key not configured');
+  }
+
   const assets = userPreferences?.interestedAssets?.join(', ') || 'cryptocurrency';
   const investorType = userPreferences?.investorType || 'investor';
 
-  const prompt = `Daily crypto insight for ${investorType}: ${assets}`;
+  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}. Make it actionable and relevant to today's market.`;
 
   try {
+    // Use HuggingFace router endpoint with OpenAI-compatible chat completions format
     const response = await axios.post(
-      `${HUGGINGFACE_API_BASE}/gpt2`,
+      `${HUGGINGFACE_API_BASE}/chat/completions`,
       {
-        inputs: prompt,
-        parameters: {
-          max_length: 100,
-        },
+        model: 'meta-llama/Llama-3.2-3B-Instruct', // Using a model available on HuggingFace router
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        max_tokens: 150,
+        temperature: 0.7,
       },
       {
         headers: {
-          ...(apiKey && { 'Authorization': `Bearer ${apiKey}` }),
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
+        timeout: 20000, // 20 second timeout for inference
       }
     );
 
-    const content = Array.isArray(response.data)
-      ? response.data[0]?.generated_text || 'Market analysis unavailable.'
-      : response.data?.generated_text || 'Market analysis unavailable.';
+    const content = response.data.choices?.[0]?.message?.content || 'Unable to generate insight.';
+
+    if (!content || content.trim().length < 20) {
+      throw new Error('HuggingFace generated invalid content');
+    }
 
     return {
       id: `insight-${Date.now()}`,
-      content: content.replace(prompt, '').trim() || 'Market analysis unavailable.',
+      content: content.trim(),
       generatedAt: new Date().toISOString(),
-      model: 'HuggingFace (GPT-2)',
+      model: 'HuggingFace (Llama 3.2)',
     };
   } catch (error: any) {
-    // HuggingFace free tier may have rate limits
+    console.error('HuggingFace API error:', error.message);
+    if (error.response) {
+      console.error('HuggingFace response status:', error.response.status);
+      console.error('HuggingFace response data:', error.response.data);
+      
+      // Check for specific error types
+      if (error.response.status === 400) {
+        const errorData = error.response.data?.error;
+        if (errorData?.code === 'model_not_supported' || errorData?.code === 'model_not_found') {
+          console.error('HuggingFace Error: Model not available or token lacks Inference Providers permissions.');
+          console.error('Solution: Enable "Make calls to Inference Providers" permission in your HuggingFace token settings.');
+        }
+      }
+    }
     throw new Error('HuggingFace API error');
   }
 };
 
 /**
- * Fallback insight if all APIs fail
+ * Fallback insight if both APIs fail (personalized based on user preferences)
  */
-const getFallbackInsight = (): AIInsight => {
+const getFallbackInsight = (userPreferences?: {
+  interestedAssets?: string[];
+  investorType?: string;
+}): AIInsight => {
+  const assets = userPreferences?.interestedAssets?.length 
+    ? userPreferences.interestedAssets.join(', ')
+    : 'cryptocurrency';
+  
+  const investorType = userPreferences?.investorType || 'investor';
+  
+  // Generate personalized fallback content based on user preferences
+  let content = `Today's crypto market shows continued volatility. `;
+  
+  if (userPreferences?.interestedAssets && userPreferences.interestedAssets.length > 0) {
+    content += `For ${investorType}s interested in ${assets}, `;
+  } else {
+    content += `For ${investorType}s, `;
+  }
+  
+  content += `stay informed and make decisions based on your risk tolerance and investment strategy. Monitor market trends and consider your long-term goals when making investment decisions.`;
+  
   return {
     id: `insight-${Date.now()}`,
-    content: 'Today\'s crypto market shows continued volatility. Stay informed and make decisions based on your risk tolerance and investment strategy.',
+    content,
     generatedAt: new Date().toISOString(),
     model: 'Fallback',
   };

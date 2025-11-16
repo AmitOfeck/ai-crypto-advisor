@@ -34,15 +34,35 @@ export const getRandomMeme = async (): Promise<MemeItem> => {
 const getRedditMeme = async (): Promise<MemeItem | null> => {
   try {
     // Reddit JSON API - get hot posts from cryptomemes subreddit
-    const response = await axios.get('https://www.reddit.com/r/cryptomemes/hot.json', {
-      params: {
-        limit: 25,
-      },
-      headers: {
-        'User-Agent': 'AI-Crypto-Advisor/1.0',
-      },
-      timeout: 5000, // 5 second timeout
-    });
+    // Try with www first, fallback to direct domain if DNS fails
+    let response;
+    try {
+      response = await axios.get('https://www.reddit.com/r/cryptomemes/hot.json', {
+        params: {
+          limit: 25,
+        },
+        headers: {
+          'User-Agent': 'AI-Crypto-Advisor/1.0',
+        },
+        timeout: 5000, // 5 second timeout
+      });
+    } catch (dnsError: any) {
+      // If DNS fails, try without www
+      if (dnsError.code === 'ENOTFOUND' || dnsError.message?.includes('getaddrinfo')) {
+        console.warn('Reddit www failed, trying direct domain...');
+        response = await axios.get('https://reddit.com/r/cryptomemes/hot.json', {
+          params: {
+            limit: 25,
+          },
+          headers: {
+            'User-Agent': 'AI-Crypto-Advisor/1.0',
+          },
+          timeout: 5000,
+        });
+      } else {
+        throw dnsError;
+      }
+    }
 
     const posts = response.data?.data?.children || [];
     

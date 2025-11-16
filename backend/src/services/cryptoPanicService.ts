@@ -24,26 +24,26 @@ export interface NewsItem {
  */
 export const getMarketNews = async (limit: number = 10): Promise<NewsItem[]> => {
   try {
-    // CryptoPanic free API - public endpoint (no auth required for basic usage)
-    // Optional API key for better rate limits
     const apiKey = process.env.CRYPTOPANIC_API_KEY;
     const params: any = {
-      public: true,
       filter: 'hot', // hot, rising, or bullrun
       currencies: 'BTC,ETH', // Filter by major coins
     };
 
-    // Add API key if configured
+    // Add API key if configured (required for API access)
     if (apiKey && apiKey !== 'your-cryptopanic-api-key-here') {
       params.auth_token = apiKey;
+    } else {
+      // If no API key, use public endpoint
+      params.public = true;
     }
 
     const response = await axios.get(`${CRYPTOPANIC_API_BASE}/posts/`, {
       params,
       headers: {
-        // Some free APIs require a user-agent
         'User-Agent': 'AI-Crypto-Advisor/1.0',
       },
+      timeout: 10000, // 10 second timeout
     });
 
     const results = response.data.results || [];
