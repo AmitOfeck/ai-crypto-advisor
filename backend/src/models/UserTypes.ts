@@ -4,7 +4,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password: string; // Raw password - no hashing yet
+  password: string; // Hashed password (bcrypt) - stored in DB
   createdAt: Date;
   updatedAt: Date;
 }
@@ -12,7 +12,7 @@ export interface User {
 export interface CreateUserData {
   name: string;
   email: string;
-  password: string; // Raw password - no hashing yet
+  password: string; // Plain text password - will be hashed before saving
 }
 
 export interface LoginCredentials {

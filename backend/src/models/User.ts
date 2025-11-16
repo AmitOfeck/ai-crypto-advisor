@@ -5,7 +5,7 @@ import { CreateUserData, LoginCredentials } from './UserTypes';
 export interface IUser extends Document {
   name: string;
   email: string;
-  password: string; // Raw password - no hashing yet
+  password: string; // Hashed password (bcrypt)
   createdAt: Date;
   updatedAt: Date;
 }
