@@ -26,8 +26,8 @@ export const getDashboard = async (req: AuthRequest, res: Response): Promise<voi
       preferences?.interestedAssets && preferences.interestedAssets.length > 0
         ? getSpecificCoinPrices(preferences.interestedAssets.slice(0, 10))
         : getCoinPrices(10),
-      // Get market news
-      getMarketNews(10),
+      // Get market news - personalized based on user's interested assets
+      getMarketNews(10, preferences?.interestedAssets),
       // Get AI insight with user preferences
       getAIInsight({
         interestedAssets: preferences?.interestedAssets,
