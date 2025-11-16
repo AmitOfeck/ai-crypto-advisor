@@ -83,7 +83,8 @@ const Dashboard: React.FC = () => {
     }).format(price);
   };
 
-  const formatMarketCap = (cap: number) => {
+  const formatMarketCap = (cap: number | null | undefined) => {
+    if (!cap || cap === null || cap === undefined) return 'N/A';
     if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
     if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
     if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
@@ -152,42 +153,93 @@ const Dashboard: React.FC = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* AI Insight Section - Full Width */}
-        <div className="mb-6 sm:mb-8">
-          <Card
-            title="AI Insight of the Day"
-            headerAction={
-              dashboardData.aiInsight && (
-                <FeedbackButtons
-                  feedbackType="ai_insight"
-                  itemId={dashboardData.aiInsight.id}
-                />
-              )
-            }
-            className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border-indigo-500/30"
-          >
-            {dashboardData.aiInsight && (
-              <div className="space-y-3">
-                <p className="text-slate-200 text-base sm:text-lg leading-relaxed">
-                  {dashboardData.aiInsight.content}
-                </p>
-                <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-400 pt-2 border-t border-slate-700/50">
-                  <span className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-                    {dashboardData.aiInsight.model || 'AI'}
-                  </span>
-                  <span>•</span>
-                  <span>{formatDate(dashboardData.aiInsight.generatedAt)}</span>
-                </div>
-              </div>
-            )}
-          </Card>
-        </div>
-
-        {/* Main Content Grid - 3 columns on large screens */}
+        {/* Balanced 2x2 Grid Layout - All sections with equal visual weight */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Coin Prices Section - Takes 2 columns on large screens */}
+          {/* Top Row: AI Insight (2 cols) + Meme (1 col) */}
+          
+          {/* AI Insight Section - Takes 2 columns */}
           <div className="lg:col-span-2">
+            <Card
+              title="AI Insight of the Day"
+              headerAction={
+                dashboardData.aiInsight && (
+                  <FeedbackButtons
+                    feedbackType="ai_insight"
+                    itemId={dashboardData.aiInsight.id}
+                  />
+                )
+              }
+              className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border-indigo-500/30 h-full"
+            >
+              {dashboardData.aiInsight && (
+                <div className="space-y-3 flex flex-col h-full">
+                  <p className="text-slate-200 text-base sm:text-lg leading-relaxed flex-grow">
+                    {dashboardData.aiInsight.content}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-400 pt-3 border-t border-slate-700/50">
+                    <span className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
+                      {dashboardData.aiInsight.model || 'AI'}
+                    </span>
+                    <span>•</span>
+                    <span>{formatDate(dashboardData.aiInsight.generatedAt)}</span>
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
+
+          {/* Meme Section - Takes 1 column, same row as AI Insight */}
+          {dashboardData.meme && (
+            <div className="lg:col-span-1">
+              <Card
+                title="Fun Crypto Meme"
+                headerAction={
+                  <FeedbackButtons
+                    feedbackType="meme"
+                    itemId={dashboardData.meme.id}
+                  />
+                }
+                className="h-full flex flex-col"
+              >
+                <div className="space-y-3 flex flex-col flex-grow">
+                  <h3 className="text-sm sm:text-base font-semibold text-slate-100 line-clamp-2">
+                    {dashboardData.meme.title}
+                  </h3>
+                  <div className="bg-slate-700/30 rounded-lg p-2 overflow-hidden flex-grow flex items-center justify-center min-h-0">
+                    {dashboardData.meme.url ? (
+                      <a
+                        href={dashboardData.meme.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block hover:opacity-90 transition-opacity w-full h-full flex items-center justify-center"
+                      >
+                        <img
+                          src={dashboardData.meme.imageUrl}
+                          alt={dashboardData.meme.title}
+                          className="w-full h-full max-h-[280px] object-contain rounded-lg"
+                        />
+                      </a>
+                    ) : (
+                      <img
+                        src={dashboardData.meme.imageUrl}
+                        alt={dashboardData.meme.title}
+                        className="w-full h-full max-h-[280px] object-contain rounded-lg"
+                      />
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 text-center">
+                    via {dashboardData.meme.source}
+                  </p>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Bottom Row: Coin Prices (1 col) + Market News (2 cols) */}
+          
+          {/* Coin Prices Section - Takes 1 column */}
+          <div className="lg:col-span-1">
             <Card
               title="Coin Prices"
               headerAction={
@@ -198,8 +250,9 @@ const Dashboard: React.FC = () => {
                   />
                 )
               }
+              className="h-full flex flex-col"
             >
-              <div className="space-y-3">
+              <div className="space-y-3 flex-grow overflow-y-auto max-h-[500px] pr-2">
                 {dashboardData.coinPrices.map((coin) => (
                   <div
                     key={coin.id}
@@ -244,100 +297,54 @@ const Dashboard: React.FC = () => {
             </Card>
           </div>
 
-          {/* Meme Section - Compact, takes 1 column on large screens */}
-          {dashboardData.meme && (
-            <div className="lg:col-span-1">
-              <Card
-                title="Fun Crypto Meme"
-                headerAction={
+          {/* Market News Section - Takes 2 columns */}
+          <div className="lg:col-span-2">
+            <Card
+              title="Market News"
+              headerAction={
+                dashboardData.marketNews.length > 0 && (
                   <FeedbackButtons
-                    feedbackType="meme"
-                    itemId={dashboardData.meme.id}
+                    feedbackType="market_news"
+                    itemId="market-news-section"
                   />
-                }
-                className="h-full"
-              >
-                <div className="space-y-3">
-                  <h3 className="text-sm sm:text-base font-semibold text-slate-100 line-clamp-2">
-                    {dashboardData.meme.title}
-                  </h3>
-                  <div className="bg-slate-700/30 rounded-lg p-2 overflow-hidden">
-                    {dashboardData.meme.url ? (
-                      <a
-                        href={dashboardData.meme.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block hover:opacity-90 transition-opacity"
-                      >
-                        <img
-                          src={dashboardData.meme.imageUrl}
-                          alt={dashboardData.meme.title}
-                          className="w-full h-auto max-h-48 sm:max-h-56 object-contain rounded-lg mx-auto"
-                        />
-                      </a>
-                    ) : (
-                      <img
-                        src={dashboardData.meme.imageUrl}
-                        alt={dashboardData.meme.title}
-                        className="w-full h-auto max-h-48 sm:max-h-56 object-contain rounded-lg mx-auto"
-                      />
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-400 text-center">
-                    via {dashboardData.meme.source}
-                  </p>
-                </div>
-              </Card>
-            </div>
-          )}
-        </div>
-
-        {/* Market News Section - Full Width Below */}
-        <div className="mt-4 sm:mt-6">
-          <Card
-            title="Market News"
-            headerAction={
-              dashboardData.marketNews.length > 0 && (
-                <FeedbackButtons
-                  feedbackType="market_news"
-                  itemId="market-news-section"
-                />
-              )
-            }
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-h-[500px] overflow-y-auto pr-2">
-              {dashboardData.marketNews.map((news) => (
-                <a
-                  key={news.id}
-                  href={news.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 group"
-                >
-                  <h4 className="font-semibold text-slate-100 text-sm sm:text-base group-hover:text-indigo-400 transition-colors mb-2 line-clamp-2">
-                    {news.title}
-                  </h4>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                    <span className="truncate">{news.source.title}</span>
-                    <span>•</span>
-                    <span className="whitespace-nowrap">{formatDate(news.published_at)}</span>
-                  </div>
-                  {news.currencies && news.currencies.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {news.currencies.slice(0, 3).map((curr) => (
-                        <span
-                          key={curr.code}
-                          className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded text-xs font-medium"
-                        >
-                          {curr.code}
-                        </span>
-                      ))}
+                )
+              }
+              className="h-full flex flex-col"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-grow overflow-y-auto max-h-[500px] pr-2">
+                {dashboardData.marketNews.map((news) => (
+                  <a
+                    key={news.id}
+                    href={news.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 group h-fit"
+                  >
+                    <h4 className="font-semibold text-slate-100 text-sm sm:text-base group-hover:text-indigo-400 transition-colors mb-2 line-clamp-2">
+                      {news.title}
+                    </h4>
+                    <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                      <span className="truncate">{news.source.title}</span>
+                      <span>•</span>
+                      <span className="whitespace-nowrap">{formatDate(news.published_at)}</span>
                     </div>
-                  )}
-                </a>
-              ))}
-            </div>
-          </Card>
+                    {news.currencies && news.currencies.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {news.currencies.slice(0, 3).map((curr) => (
+                          <span
+                            key={curr.code}
+                            className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded text-xs font-medium"
+                          >
+                            {curr.code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
