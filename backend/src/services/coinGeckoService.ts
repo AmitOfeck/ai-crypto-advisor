@@ -3,6 +3,38 @@ import axios from 'axios';
 // CoinGecko API base URL (free tier, no API key required)
 const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
 
+/**
+ * Map display names to CoinGecko API IDs
+ * Based on CoinGecko API documentation: https://www.coingecko.com/en/api/documentation
+ */
+const COIN_NAME_TO_ID_MAP: Record<string, string> = {
+  'Bitcoin': 'bitcoin',
+  'Ethereum': 'ethereum',
+  'Binance Coin': 'binancecoin',
+  'Cardano': 'cardano',
+  'Solana': 'solana',
+  'Polkadot': 'polkadot',
+  'Dogecoin': 'dogecoin',
+  'Polygon': 'matic-network',
+  'Avalanche': 'avalanche-2',
+  'Chainlink': 'chainlink',
+};
+
+/**
+ * Convert display names to CoinGecko API IDs
+ * Falls back to lowercase version if not in map
+ */
+const mapDisplayNameToCoinId = (displayName: string): string => {
+  // Check if we have a direct mapping
+  if (COIN_NAME_TO_ID_MAP[displayName]) {
+    return COIN_NAME_TO_ID_MAP[displayName];
+  }
+  
+  // Fallback: convert to lowercase and replace spaces with hyphens
+  // This handles most common cases for custom assets
+  return displayName.toLowerCase().replace(/\s+/g, '-');
+};
+
 export interface CoinPrice {
   id: string;
   symbol: string;
@@ -54,13 +86,17 @@ export const getCoinPrices = async (
 };
 
 /**
- * Get prices for specific coins by their IDs
+ * Get prices for specific coins by their display names or IDs
+ * Automatically converts display names to CoinGecko API IDs
  */
 export const getSpecificCoinPrices = async (
-  coinIds: string[],
+  coinNamesOrIds: string[],
   currency: string = 'usd'
 ): Promise<CoinPrice[]> => {
   try {
+    // Convert display names to CoinGecko IDs
+    const coinIds = coinNamesOrIds.map(mapDisplayNameToCoinId);
+    
     const response = await axios.get(`${COINGECKO_API_BASE}/coins/markets`, {
       params: {
         vs_currency: currency,
