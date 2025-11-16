@@ -37,6 +37,7 @@ interface MemeItem {
   title: string;
   imageUrl: string;
   source: string;
+  url?: string;
 }
 
 const Dashboard: React.FC = () => {
@@ -285,11 +286,26 @@ const Dashboard: React.FC = () => {
                 {dashboardData.meme.title}
               </h3>
               <div className="bg-slate-700/50 rounded-lg p-4">
-                <img
-                  src={dashboardData.meme.imageUrl}
-                  alt={dashboardData.meme.title}
-                  className="max-w-full h-auto rounded-lg mx-auto"
-                />
+                {dashboardData.meme.url ? (
+                  <a
+                    href={dashboardData.meme.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block hover:opacity-90 transition-opacity"
+                  >
+                    <img
+                      src={dashboardData.meme.imageUrl}
+                      alt={dashboardData.meme.title}
+                      className="max-w-full h-auto rounded-lg mx-auto"
+                    />
+                  </a>
+                ) : (
+                  <img
+                    src={dashboardData.meme.imageUrl}
+                    alt={dashboardData.meme.title}
+                    className="max-w-full h-auto rounded-lg mx-auto"
+                  />
+                )}
               </div>
               <p className="text-sm text-slate-400">
                 Source: {dashboardData.meme.source}

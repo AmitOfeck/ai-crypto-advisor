@@ -44,6 +44,10 @@ export const getCoinPrices = async (
     }));
   } catch (error: any) {
     console.error('CoinGecko API error:', error.message);
+    if (error.response) {
+      console.error('API response status:', error.response.status);
+      console.error('API response data:', error.response.data);
+    }
     // Return fallback data if API fails
     return getFallbackCoinPrices();
   }
@@ -77,6 +81,10 @@ export const getSpecificCoinPrices = async (
     }));
   } catch (error: any) {
     console.error('CoinGecko API error:', error.message);
+    if (error.response) {
+      console.error('API response status:', error.response.status);
+      console.error('API response data:', error.response.data);
+    }
     return getFallbackCoinPrices();
   }
 };

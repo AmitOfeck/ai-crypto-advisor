@@ -63,6 +63,10 @@ export const getMarketNews = async (limit: number = 10): Promise<NewsItem[]> => 
     }));
   } catch (error: any) {
     console.error('CryptoPanic API error:', error.message);
+    if (error.response) {
+      console.error('API response status:', error.response.status);
+      console.error('API response data:', error.response.data);
+    }
     // Return fallback news if API fails
     return getFallbackNews();
   }

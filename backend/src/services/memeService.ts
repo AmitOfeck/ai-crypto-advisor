@@ -1,19 +1,92 @@
-// Meme service - using static JSON fallback
-// In production, you could integrate Reddit API or other meme sources
+import axios from 'axios';
 
 export interface MemeItem {
   id: string;
   title: string;
   imageUrl: string;
   source: string;
+  url?: string;
 }
 
 /**
- * Get a random crypto meme
+ * Get a random crypto meme from Reddit
+ * Falls back to static memes if Reddit fails
  */
 export const getRandomMeme = async (): Promise<MemeItem> => {
-  // Static meme collection (fallback)
-  // In production, you could fetch from Reddit r/cryptomemes or similar
+  // Try Reddit first
+  try {
+    const redditMeme = await getRedditMeme();
+    if (redditMeme) {
+      return redditMeme;
+    }
+  } catch (error) {
+    console.warn('Reddit API failed, using fallback memes:', error);
+  }
+
+  // Fallback to static memes
+  return getFallbackMeme();
+};
+
+/**
+ * Get meme from Reddit r/cryptomemes
+ * Reddit JSON API (no auth required for public data)
+ */
+const getRedditMeme = async (): Promise<MemeItem | null> => {
+  try {
+    // Reddit JSON API - get hot posts from cryptomemes subreddit
+    const response = await axios.get('https://www.reddit.com/r/cryptomemes/hot.json', {
+      params: {
+        limit: 25,
+      },
+      headers: {
+        'User-Agent': 'AI-Crypto-Advisor/1.0',
+      },
+      timeout: 5000, // 5 second timeout
+    });
+
+    const posts = response.data?.data?.children || [];
+    
+    // Filter for image posts only
+    const imagePosts = posts.filter((post: any) => {
+      const data = post.data;
+      return (
+        data.post_hint === 'image' ||
+        data.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+        (data.preview && data.preview.images && data.preview.images[0])
+      );
+    });
+
+    if (imagePosts.length === 0) {
+      return null;
+    }
+
+    // Get random image post
+    const randomPost = imagePosts[Math.floor(Math.random() * imagePosts.length)];
+    const postData = randomPost.data;
+
+    // Extract image URL
+    let imageUrl = postData.url;
+    if (postData.preview?.images?.[0]?.source?.url) {
+      imageUrl = postData.preview.images[0].source.url.replace(/&amp;/g, '&');
+    }
+
+    return {
+      id: postData.id,
+      title: postData.title,
+      imageUrl: imageUrl,
+      source: 'Reddit r/cryptomemes',
+      url: `https://reddit.com${postData.permalink}`,
+    };
+  } catch (error: any) {
+    console.error('Reddit API error:', error.message);
+    return null;
+  }
+};
+
+/**
+ * Fallback static memes
+ */
+const getFallbackMeme = (): MemeItem => {
   const memes: MemeItem[] = [
     {
       id: '1',
@@ -47,18 +120,6 @@ export const getRandomMeme = async (): Promise<MemeItem> => {
     },
   ];
 
-  // Return random meme
   const randomIndex = Math.floor(Math.random() * memes.length);
   return memes[randomIndex];
 };
-
-/**
- * Get meme from Reddit (future implementation)
- * TODO: Implement Reddit API integration
- */
-export const getRedditMeme = async (): Promise<MemeItem | null> => {
-  // TODO: Implement Reddit API scraping
-  // For now, return null to use fallback
-  return null;
-};
-
