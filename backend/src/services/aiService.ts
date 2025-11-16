@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getMarketNews } from './cryptoPanicService';
 
 // OpenRouter API configuration (free tier available)
 const OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1';
@@ -67,7 +68,20 @@ const getOpenRouterInsight = async (userPreferences?: {
   const assets = userPreferences?.interestedAssets?.join(', ') || 'cryptocurrency';
   const investorType = userPreferences?.investorType || 'investor';
 
-  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}. Make it actionable and relevant to today's market.`;
+  // Fetch relevant news from CryptoPanic to make insight more data-driven
+  let newsContext = '';
+  try {
+    const relevantNews = await getMarketNews(3, userPreferences?.interestedAssets);
+    if (relevantNews && relevantNews.length > 0) {
+      const newsTitles = relevantNews.map(news => `- ${news.title}`).join('\n');
+      newsContext = `\n\nRecent news about ${assets}:\n${newsTitles}\n\n`;
+    }
+  } catch (error) {
+    // If news fetch fails, continue without it
+    console.warn('Failed to fetch news for AI context:', error);
+  }
+
+  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}.${newsContext}Make it actionable and relevant to today's market based on the recent news above.`;
 
   try {
     const response = await axios.post(
@@ -125,7 +139,20 @@ const getHuggingFaceInsight = async (userPreferences?: {
   const assets = userPreferences?.interestedAssets?.join(', ') || 'cryptocurrency';
   const investorType = userPreferences?.investorType || 'investor';
 
-  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}. Make it actionable and relevant to today's market.`;
+  // Fetch relevant news from CryptoPanic to make insight more data-driven
+  let newsContext = '';
+  try {
+    const relevantNews = await getMarketNews(3, userPreferences?.interestedAssets);
+    if (relevantNews && relevantNews.length > 0) {
+      const newsTitles = relevantNews.map(news => `- ${news.title}`).join('\n');
+      newsContext = `\n\nRecent news about ${assets}:\n${newsTitles}\n\n`;
+    }
+  } catch (error) {
+    // If news fetch fails, continue without it
+    console.warn('Failed to fetch news for AI context:', error);
+  }
+
+  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}.${newsContext}Make it actionable and relevant to today's market based on the recent news above.`;
 
   try {
     // Use HuggingFace router endpoint with OpenAI-compatible chat completions format
