@@ -13,25 +13,38 @@ export interface AIInsight {
 
 /**
  * Get AI insight using OpenRouter (free tier)
- * Falls back to HuggingFace if OpenRouter fails
+ * Falls back to HuggingFace if OpenRouter fails, then to static fallback
  */
 export const getAIInsight = async (userPreferences?: {
   interestedAssets?: string[];
   investorType?: string;
 }): Promise<AIInsight> => {
-  // Try OpenRouter first
-  try {
-    return await getOpenRouterInsight(userPreferences);
-  } catch (error) {
-    console.error('OpenRouter failed, trying HuggingFace:', error);
-    // Fallback to HuggingFace
+  // Try OpenRouter first if API key is configured
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (openRouterKey && openRouterKey !== 'your-openrouter-api-key-here') {
+    try {
+      return await getOpenRouterInsight(userPreferences);
+    } catch (error) {
+      console.warn('OpenRouter failed, trying HuggingFace:', error);
+    }
+  } else {
+    console.log('OpenRouter API key not configured, trying HuggingFace...');
+  }
+
+  // Fallback to HuggingFace if OpenRouter fails or not configured
+  const huggingFaceKey = process.env.HUGGINGFACE_API_KEY;
+  if (huggingFaceKey && huggingFaceKey !== 'your-huggingface-api-key-here') {
     try {
       return await getHuggingFaceInsight(userPreferences);
     } catch (error) {
-      console.error('HuggingFace failed, using fallback:', error);
-      return getFallbackInsight();
+      console.warn('HuggingFace failed, using fallback:', error);
     }
+  } else {
+    console.log('HuggingFace API key not configured, using fallback insight...');
   }
+
+  // Final fallback to static insight
+  return getFallbackInsight();
 };
 
 /**
@@ -43,7 +56,7 @@ const getOpenRouterInsight = async (userPreferences?: {
 }): Promise<AIInsight> => {
   const apiKey = process.env.OPENROUTER_API_KEY;
   
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'your-openrouter-api-key-here') {
     throw new Error('OpenRouter API key not configured');
   }
 
