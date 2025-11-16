@@ -24,8 +24,13 @@ export const getAIInsight = async (userPreferences?: {
   if (openRouterKey && openRouterKey !== 'your-openrouter-api-key-here') {
     try {
       return await getOpenRouterInsight(userPreferences);
-    } catch (error) {
-      console.warn('OpenRouter failed, trying HuggingFace:', error);
+    } catch (error: any) {
+      // Log specific error type for debugging
+      if (error.message?.includes('rate limit')) {
+        console.warn('OpenRouter rate limit exceeded, trying HuggingFace...');
+      } else {
+        console.warn('OpenRouter failed, trying HuggingFace:', error.message || error);
+      }
     }
   } else {
     console.log('OpenRouter API key not configured, trying HuggingFace...');
@@ -48,7 +53,14 @@ export const getAIInsight = async (userPreferences?: {
 };
 
 /**
- * Get AI insight from OpenRouter
+ * Sleep helper for retry delays
+ */
+const sleep = (ms: number): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+/**
+ * Get AI insight from OpenRouter with retry logic for rate limits
  */
 const getOpenRouterInsight = async (userPreferences?: {
   interestedAssets?: string[];
@@ -65,34 +77,65 @@ const getOpenRouterInsight = async (userPreferences?: {
 
   const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}. Make it actionable and relevant to today's market.`;
 
-  const response = await axios.post(
-    `${OPENROUTER_API_BASE}/chat/completions`,
-    {
-      model: 'meta-llama/llama-3.2-3b-instruct:free', // Free model
-      messages: [
+  const maxRetries = 3;
+  let lastError: any;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await axios.post(
+        `${OPENROUTER_API_BASE}/chat/completions`,
         {
-          role: 'user',
-          content: prompt,
+          model: 'meta-llama/llama-3.2-3b-instruct:free', // Free model
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          max_tokens: 150,
         },
-      ],
-      max_tokens: 150,
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const content = response.data.choices[0]?.message?.content || 'Unable to generate insight.';
+
+      return {
+        id: `insight-${Date.now()}`,
+        content,
+        generatedAt: new Date().toISOString(),
+        model: 'OpenRouter (Llama 3.2)',
+      };
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if it's a rate limit error (429)
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.headers['retry-after'] 
+          ? parseInt(error.response.headers['retry-after']) * 1000 
+          : Math.pow(2, attempt) * 1000; // Exponential backoff: 1s, 2s, 4s
+        
+        if (attempt < maxRetries - 1) {
+          console.log(`OpenRouter rate limited (429). Retrying in ${retryAfter}ms... (attempt ${attempt + 1}/${maxRetries})`);
+          await sleep(retryAfter);
+          continue; // Retry
+        } else {
+          console.error('OpenRouter rate limit exceeded after all retries');
+          throw new Error('OpenRouter rate limit exceeded. Please try again in a few moments.');
+        }
+      }
+      
+      // For other errors, throw immediately
+      throw error;
     }
-  );
+  }
 
-  const content = response.data.choices[0]?.message?.content || 'Unable to generate insight.';
-
-  return {
-    id: `insight-${Date.now()}`,
-    content,
-    generatedAt: new Date().toISOString(),
-    model: 'OpenRouter (Llama 3.2)',
-  };
+  // Should never reach here, but TypeScript needs it
+  throw lastError || new Error('Failed to get OpenRouter insight');
 };
 
 /**
