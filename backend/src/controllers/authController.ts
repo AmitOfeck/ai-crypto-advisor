@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CreateUserData, LoginCredentials } from '../models/User';
+import { CreateUserData, LoginCredentials } from '../models/UserTypes';
 import { createUser, validateUser } from '../services/authService';
 
 // TODO: Add input validation
@@ -27,8 +27,14 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
         email: newUser.email,
       },
     });
-  } catch (error) {
-    // TODO: Add proper error handling
+  } catch (error: any) {
+    // Handle duplicate email error (MongoDB unique constraint)
+    if (error.code === 11000 || error.keyPattern?.email) {
+      res.status(409).json({ error: 'Email already exists' });
+      return;
+    }
+    // TODO: Add proper error handling for other errors
+    console.error('Signup error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -61,8 +67,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     // TODO: Add proper error handling
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

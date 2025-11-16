@@ -1,7 +1,8 @@
-// User model interfaces
+import mongoose, { Schema, Document } from 'mongoose';
+import { CreateUserData, LoginCredentials } from './UserTypes';
 
-export interface User {
-  id: string;
+// MongoDB User Document interface
+export interface IUser extends Document {
   name: string;
   email: string;
   password: string; // Raw password - no hashing yet
@@ -9,14 +10,30 @@ export interface User {
   updatedAt: Date;
 }
 
-export interface CreateUserData {
-  name: string;
-  email: string;
-  password: string; // Raw password - no hashing yet
-}
+// User Schema
+const UserSchema = new Schema<IUser>(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true, // Automatically adds createdAt and updatedAt
+  }
+);
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
+// Export User model
+export const User = mongoose.model<IUser>('User', UserSchema);
