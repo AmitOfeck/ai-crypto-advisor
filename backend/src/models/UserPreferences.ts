@@ -14,7 +14,7 @@ export enum InvestorType {
 export enum ContentPreference {
   MARKET_NEWS = 'Market News',
   CHARTS = 'Charts',
-  SOCIAL = 'Social',
+  AI_INSIGHT = 'AI Insight',
   FUN = 'Fun',
 }
 

@@ -13,7 +13,7 @@ const INVESTOR_TYPES = [
   'Other',
 ];
 
-const CONTENT_PREFERENCES = ['Market News', 'Charts', 'Social', 'Fun'];
+const CONTENT_PREFERENCES = ['Market News', 'Charts', 'AI Insight', 'Fun'];
 
 const POPULAR_ASSETS = [
   'Bitcoin',
