@@ -19,7 +19,7 @@ interface CoinPrice {
 interface NewsItem {
   id: string;
   title: string;
-  url: string;
+  url?: string; // Optional - fallback news may not have real URLs
   published_at: string;
   source: { title: string; region: string };
   currencies?: Array<{ code: string; title: string }>;
@@ -342,36 +342,51 @@ const Dashboard: React.FC = () => {
               >
                 {dashboardData.marketNews.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-grow overflow-y-auto max-h-[500px] pr-2">
-                    {dashboardData.marketNews.map((news) => (
-                      <a
-                        key={news.id}
-                        href={news.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 group h-fit"
-                      >
-                        <h4 className="font-semibold text-slate-100 text-sm sm:text-base group-hover:text-indigo-400 transition-colors mb-2 line-clamp-2">
-                          {news.title}
-                        </h4>
-                        <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                          <span className="truncate">{news.source.title}</span>
-                          <span>•</span>
-                          <span className="whitespace-nowrap">{formatDate(news.published_at)}</span>
-                        </div>
-                        {news.currencies && news.currencies.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {news.currencies.slice(0, 3).map((curr) => (
-                              <span
-                                key={curr.code}
-                                className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded text-xs font-medium"
-                              >
-                                {curr.code}
-                              </span>
-                            ))}
+                    {dashboardData.marketNews.map((news) => {
+                      const NewsContent = (
+                        <>
+                          <h4 className={`font-semibold text-slate-100 text-sm sm:text-base mb-2 line-clamp-2 ${news.url ? 'group-hover:text-indigo-400 transition-colors' : ''}`}>
+                            {news.title}
+                          </h4>
+                          <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                            <span className="truncate">{news.source.title}</span>
+                            <span>•</span>
+                            <span className="whitespace-nowrap">{formatDate(news.published_at)}</span>
                           </div>
-                        )}
-                      </a>
-                    ))}
+                          {news.currencies && news.currencies.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {news.currencies.slice(0, 3).map((curr) => (
+                                <span
+                                  key={curr.code}
+                                  className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded text-xs font-medium"
+                                >
+                                  {curr.code}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+
+                      return news.url ? (
+                        <a
+                          key={news.id}
+                          href={news.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 group h-fit"
+                        >
+                          {NewsContent}
+                        </a>
+                      ) : (
+                        <div
+                          key={news.id}
+                          className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg border border-slate-700/30 h-fit"
+                        >
+                          {NewsContent}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-slate-400 text-center py-8">

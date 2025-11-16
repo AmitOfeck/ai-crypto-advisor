@@ -6,7 +6,7 @@ const CRYPTOPANIC_API_BASE = 'https://cryptopanic.com/api/v1';
 export interface NewsItem {
   id: string;
   title: string;
-  url: string;
+  url?: string; // Optional - fallback news may not have real URLs
   published_at: string;
   source: {
     title: string;
@@ -167,12 +167,12 @@ export const getMarketNews = async (
  * Fallback news if API fails
  */
 const getFallbackNews = (): NewsItem[] => {
+  const now = new Date();
   return [
     {
       id: '1',
       title: 'Bitcoin Reaches New All-Time High',
-      url: 'https://example.com/news/1',
-      published_at: new Date().toISOString(),
+      published_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
       source: {
         title: 'Crypto News',
         region: 'global',
@@ -184,14 +184,115 @@ const getFallbackNews = (): NewsItem[] => {
     {
       id: '2',
       title: 'Ethereum 2.0 Staking Reaches Milestone',
-      url: 'https://example.com/news/2',
-      published_at: new Date().toISOString(),
+      published_at: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
       source: {
         title: 'Crypto News',
         region: 'global',
       },
       currencies: [
         { code: 'ETH', title: 'Ethereum' },
+      ],
+    },
+    {
+      id: '3',
+      title: 'Major Exchange Lists New Altcoin Trading Pairs',
+      published_at: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+      source: {
+        title: 'Crypto News',
+        region: 'global',
+      },
+      currencies: [
+        { code: 'BNB', title: 'Binance Coin' },
+      ],
+    },
+    {
+      id: '4',
+      title: 'DeFi Protocol Announces Major Upgrade',
+      published_at: new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
+      source: {
+        title: 'Crypto News',
+        region: 'global',
+      },
+      currencies: [
+        { code: 'ETH', title: 'Ethereum' },
+        { code: 'SOL', title: 'Solana' },
+      ],
+    },
+    {
+      id: '5',
+      title: 'Institutional Investors Increase Crypto Holdings',
+      published_at: new Date(now.getTime() - 10 * 60 * 60 * 1000).toISOString(), // 10 hours ago
+      source: {
+        title: 'Crypto News',
+        region: 'global',
+      },
+      currencies: [
+        { code: 'BTC', title: 'Bitcoin' },
+        { code: 'ETH', title: 'Ethereum' },
+      ],
+    },
+    {
+      id: '6',
+      title: 'NFT Market Shows Signs of Recovery',
+      published_at: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
+      source: {
+        title: 'Crypto News',
+        region: 'global',
+      },
+      currencies: [
+        { code: 'ETH', title: 'Ethereum' },
+      ],
+    },
+    {
+      id: '7',
+      title: 'Layer 2 Solutions Gain Traction',
+      published_at: new Date(now.getTime() - 14 * 60 * 60 * 1000).toISOString(), // 14 hours ago
+      source: {
+        title: 'Crypto News',
+        region: 'global',
+      },
+      currencies: [
+        { code: 'ETH', title: 'Ethereum' },
+        { code: 'MATIC', title: 'Polygon' },
+      ],
+    },
+    {
+      id: '8',
+      title: 'Regulatory Clarity Boosts Market Confidence',
+      published_at: new Date(now.getTime() - 16 * 60 * 60 * 1000).toISOString(), // 16 hours ago
+      source: {
+        title: 'Crypto News',
+        region: 'global',
+      },
+      currencies: [
+        { code: 'BTC', title: 'Bitcoin' },
+      ],
+    },
+    {
+      id: '9',
+      title: 'Smart Contract Platform Launches New Features',
+      published_at: new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString(), // 18 hours ago
+      source: {
+        title: 'Crypto News',
+        region: 'global',
+      },
+      currencies: [
+        { code: 'ADA', title: 'Cardano' },
+        { code: 'SOL', title: 'Solana' },
+      ],
+    },
+    {
+      id: '10',
+      title: 'Crypto Adoption Reaches New Heights',
+      published_at: new Date(now.getTime() - 20 * 60 * 60 * 1000).toISOString(), // 20 hours ago
+      source: {
+        title: 'Crypto News',
+        region: 'global',
+      },
+      currencies: [
+        { code: 'BTC', title: 'Bitcoin' },
+        { code: 'ETH', title: 'Ethereum' },
+        { code: 'BNB', title: 'Binance Coin' },
       ],
     },
   ];
