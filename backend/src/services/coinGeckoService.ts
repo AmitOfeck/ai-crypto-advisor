@@ -97,6 +97,9 @@ export const getSpecificCoinPrices = async (
     // Convert display names to CoinGecko IDs
     const coinIds = coinNamesOrIds.map(mapDisplayNameToCoinId);
     
+    console.log('[CoinGecko] Requesting prices for:', coinNamesOrIds);
+    console.log('[CoinGecko] Mapped IDs:', coinIds);
+    
     const response = await axios.get(`${COINGECKO_API_BASE}/coins/markets`, {
       params: {
         vs_currency: currency,
@@ -104,9 +107,18 @@ export const getSpecificCoinPrices = async (
         order: 'market_cap_desc',
         sparkline: false,
       },
+      timeout: 15000, // 15 second timeout
     });
 
-    return response.data.map((coin: any) => ({
+    // Handle empty response - CoinGecko returns [] if no coins match
+    if (!response.data || response.data.length === 0) {
+      console.warn('[CoinGecko] Empty response for IDs:', coinIds);
+      console.warn('[CoinGecko] Falling back to top coins');
+      // Fallback to top coins instead of static data
+      return getCoinPrices(coinNamesOrIds.length || 10);
+    }
+
+    const prices = response.data.map((coin: any) => ({
       id: coin.id,
       symbol: coin.symbol.toUpperCase(),
       name: coin.name,
@@ -115,12 +127,24 @@ export const getSpecificCoinPrices = async (
       market_cap: coin.market_cap,
       image: coin.image,
     }));
+    
+    console.log(`[CoinGecko] Successfully fetched ${prices.length} coins`);
+    return prices;
   } catch (error: any) {
-    console.error('CoinGecko API error:', error.message);
+    console.error('[CoinGecko] API error:', error.message);
+    console.error('[CoinGecko] Requested coins:', coinNamesOrIds);
     if (error.response) {
-      console.error('API response status:', error.response.status);
-      console.error('API response data:', error.response.data);
+      console.error('[CoinGecko] Status:', error.response.status);
+      console.error('[CoinGecko] Response:', error.response.data);
     }
+    
+    // If rate limited (429), try fallback to top coins
+    if (error.response?.status === 429) {
+      console.warn('[CoinGecko] Rate limited, falling back to top coins');
+      return getCoinPrices(coinNamesOrIds.length || 10);
+    }
+    
+    // For other errors, return fallback
     return getFallbackCoinPrices();
   }
 };
