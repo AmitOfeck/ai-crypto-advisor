@@ -69,13 +69,9 @@ export const getUserFeedback = async (req: AuthRequest, res: Response): Promise<
 
     const feedback = await getFeedback(req.user.userId, feedbackType, itemId);
 
-    if (!feedback) {
-      res.status(404).json({ error: 'Feedback not found' });
-      return;
-    }
-
+    // Return 200 with null if no feedback found (not an error - user hasn't voted yet)
     res.status(200).json({
-      feedback,
+      feedback: feedback || null,
     });
   } catch (error: any) {
     console.error('Get feedback error:', error);
