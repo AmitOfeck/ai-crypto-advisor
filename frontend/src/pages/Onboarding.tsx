@@ -89,10 +89,10 @@ const Onboarding: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-950 py-12 px-4">
       <div className="max-w-4xl mx-auto fade-in">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-teal-400 to-amber-400 bg-clip-text text-transparent mb-2">
             Welcome! Let's personalize your experience
           </h1>
           <p className="text-slate-400">Tell us about your crypto interests</p>
@@ -112,8 +112,8 @@ const Onboarding: React.FC = () => {
                       px-4 py-2 rounded-lg font-medium transition-all
                       ${
                         interestedAssets.includes(asset)
-                          ? 'bg-indigo-600 text-white shadow-lg'
-                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                          ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/50'
+                          : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 border border-slate-700/50'
                       }
                     `}
                   >
@@ -136,8 +136,8 @@ const Onboarding: React.FC = () => {
                     px-4 py-3 rounded-lg font-medium transition-all text-left
                     ${
                       investorType === type
-                        ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-400'
-                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        ? 'bg-cyan-600 text-white shadow-lg ring-2 ring-cyan-400 shadow-cyan-500/50'
+                        : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 border border-slate-700/50'
                     }
                   `}
                 >
@@ -159,8 +159,8 @@ const Onboarding: React.FC = () => {
                     px-4 py-3 rounded-lg font-medium transition-all
                     ${
                       contentPreferences.includes(pref)
-                        ? 'bg-purple-600 text-white shadow-lg ring-2 ring-purple-400'
-                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        ? 'bg-teal-600 text-white shadow-lg ring-2 ring-teal-400 shadow-teal-500/50'
+                        : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 border border-slate-700/50'
                     }
                   `}
                 >

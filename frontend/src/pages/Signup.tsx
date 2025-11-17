@@ -29,16 +29,16 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-950 px-4">
       <div className="w-full max-w-md fade-in">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-teal-400 to-amber-400 bg-clip-text text-transparent mb-2">
             AI Crypto Advisor
           </h1>
           <p className="text-slate-400">Create your account to get started</p>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700/50 p-8 shadow-2xl">
+        <div className="bg-slate-900/60 backdrop-blur-lg rounded-2xl border border-slate-700/50 p-8 shadow-2xl shadow-cyan-500/10">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm">
@@ -88,7 +88,7 @@ const Signup: React.FC = () => {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
               >
                 Sign in
               </Link>
