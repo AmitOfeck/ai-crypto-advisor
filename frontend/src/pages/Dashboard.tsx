@@ -1,120 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { dashboardAPI, onboardingAPI } from '../utils/apiService';
+import { useDashboard } from '../hooks/useDashboard';
+import { useFormatting } from '../hooks/useFormatting';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import FeedbackButtons from '../components/FeedbackButtons';
 
-interface CoinPrice {
-  id: string;
-  symbol: string;
-  name: string;
-  current_price: number;
-  price_change_percentage_24h: number;
-  market_cap: number;
-  image: string;
-}
-
-interface NewsItem {
-  id: string;
-  title: string;
-  url?: string; // Optional - fallback news may not have real URLs
-  published_at: string;
-  source: { title: string; region: string };
-  currencies?: Array<{ code: string; title: string }>;
-}
-
-interface AIInsight {
-  id: string;
-  content: string;
-  generatedAt: string;
-  model?: string;
-}
-
-interface MemeItem {
-  id: string;
-  title: string;
-  imageUrl: string;
-  source: string;
-  url?: string;
-}
-
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState<{
-    coinPrices: CoinPrice[];
-    marketNews: NewsItem[];
-    aiInsight: AIInsight;
-    meme: MemeItem;
-    preferences?: {
-      investorType: string;
-      contentPreferences: string[];
-    } | null;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        // Check onboarding status
-        const statusResponse = await onboardingAPI.getStatus();
-        if (!statusResponse.completed) {
-          navigate('/onboarding');
-          return;
-        }
-
-        // Load dashboard data
-        const response = await dashboardAPI.getDashboard();
-
-        // TEMPORARY: Log market news to inspect structure
-        console.log('=== Dashboard Response ===');
-        console.log('Full response:', response);
-        console.log('Market News:', response.marketNews);
-        if (response.marketNews && response.marketNews.length > 0) {
-          console.log('First article:', response.marketNews[0]);
-          console.log('First article keys:', Object.keys(response.marketNews[0]));
-          console.log('First article URL field:', response.marketNews[0].url);
-          console.log('First article full structure:', JSON.stringify(response.marketNews[0], null, 2));
-        }
-        console.log('==========================');
-
-        setDashboardData(response);
-      } catch (err: any) {
-        setError(err.response?.data?.error || 'Failed to load dashboard');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadDashboard();
-  }, [navigate]);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price);
-  };
-
-  const formatMarketCap = (cap: number | null | undefined) => {
-    if (!cap || cap === null || cap === undefined) return 'N/A';
-    if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
-    if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
-    if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
-    return `$${cap.toLocaleString()}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+  const { dashboardData, isLoading, error } = useDashboard();
+  const { formatPrice, formatMarketCap, formatDate } = useFormatting();
 
   if (isLoading) {
     return (
