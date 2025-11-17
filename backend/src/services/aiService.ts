@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getMarketNews } from './cryptoPanicService';
 
 // OpenRouter API configuration (free tier available)
 const OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1';
@@ -14,41 +13,36 @@ export interface AIInsight {
 }
 
 /**
- * Get AI insight using OpenRouter and HuggingFace
- * Tries OpenRouter first, then HuggingFace, then fallback
+ * Get AI insight using HuggingFace and OpenRouter
+ * Tries HuggingFace first, then OpenRouter as fallback, then static fallback
  */
 export const getAIInsight = async (userPreferences?: {
   interestedAssets?: string[];
   investorType?: string;
 }): Promise<AIInsight> => {
-  // Try OpenRouter first if API key is configured
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  if (openRouterKey && openRouterKey !== 'your-openrouter-api-key-here') {
-    try {
-      return await getOpenRouterInsight(userPreferences);
-    } catch (error: any) {
-      // Log specific error type for debugging
-      if (error.message?.includes('rate limit') || error.response?.status === 429) {
-        console.warn('OpenRouter rate limited. Trying HuggingFace...');
-      } else {
-        console.warn('OpenRouter failed:', error.message || error);
-      }
-      // Continue to HuggingFace fallback
-    }
-  }
-
-  // Fallback to HuggingFace if OpenRouter fails AND key is configured
+  // Try HuggingFace first if API key is configured
   const huggingFaceKey = process.env.HUGGINGFACE_API_KEY;
   if (huggingFaceKey && huggingFaceKey !== 'your-huggingface-api-key-here') {
     try {
       return await getHuggingFaceInsight(userPreferences);
     } catch (error: any) {
       console.warn('HuggingFace failed:', error.message || error);
+      // Continue to OpenRouter fallback
+    }
+  }
+
+  // Fallback to OpenRouter if HuggingFace fails AND key is configured
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (openRouterKey && openRouterKey !== 'your-openrouter-api-key-here') {
+    try {
+      return await getOpenRouterInsight(userPreferences);
+    } catch (error: any) {
+      console.warn('OpenRouter failed:', error.message || error);
     }
   }
 
   // Final fallback to personalized static insight (only if both APIs fail)
-  console.warn('Both OpenRouter and HuggingFace failed. Using fallback.');
+  console.warn('Both HuggingFace and OpenRouter failed. Using fallback.');
   return getFallbackInsight(userPreferences);
 };
 
@@ -68,20 +62,7 @@ const getOpenRouterInsight = async (userPreferences?: {
   const assets = userPreferences?.interestedAssets?.join(', ') || 'cryptocurrency';
   const investorType = userPreferences?.investorType || 'investor';
 
-  // Fetch relevant news from CryptoPanic to make insight more data-driven
-  let newsContext = '';
-  try {
-    const relevantNews = await getMarketNews(3, userPreferences?.interestedAssets);
-    if (relevantNews && relevantNews.length > 0) {
-      const newsTitles = relevantNews.map(news => `- ${news.title}`).join('\n');
-      newsContext = `\n\nRecent news about ${assets}:\n${newsTitles}\n\n`;
-    }
-  } catch (error) {
-    // If news fetch fails, continue without it
-    console.warn('Failed to fetch news for AI context:', error);
-  }
-
-  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}.${newsContext}Make it actionable and relevant to today's market based on the recent news above.`;
+  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}. Make it actionable and relevant to today's market.`;
 
   try {
     const response = await axios.post(
@@ -139,20 +120,7 @@ const getHuggingFaceInsight = async (userPreferences?: {
   const assets = userPreferences?.interestedAssets?.join(', ') || 'cryptocurrency';
   const investorType = userPreferences?.investorType || 'investor';
 
-  // Fetch relevant news from CryptoPanic to make insight more data-driven
-  let newsContext = '';
-  try {
-    const relevantNews = await getMarketNews(3, userPreferences?.interestedAssets);
-    if (relevantNews && relevantNews.length > 0) {
-      const newsTitles = relevantNews.map(news => `- ${news.title}`).join('\n');
-      newsContext = `\n\nRecent news about ${assets}:\n${newsTitles}\n\n`;
-    }
-  } catch (error) {
-    // If news fetch fails, continue without it
-    console.warn('Failed to fetch news for AI context:', error);
-  }
-
-  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}.${newsContext}Make it actionable and relevant to today's market based on the recent news above.`;
+  const prompt = `Provide a brief (2-3 sentences) daily crypto market insight for a ${investorType} interested in ${assets}. Make it actionable and relevant to today's market.`;
 
   try {
     // Use HuggingFace router endpoint with OpenAI-compatible chat completions format

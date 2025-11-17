@@ -113,32 +113,71 @@ export const getMarketNews = async (
   try {
     const apiKey = process.env.CRYPTOPANIC_API_KEY;
     
-    // Use user's interested assets if provided, otherwise default to BTC,ETH
-    const currencyCodes = mapAssetsToCurrencyCodes(interestedAssets || []);
+    // Get currency codes for filtering (client-side)
+    const currencyCodes = interestedAssets && interestedAssets.length > 0
+      ? interestedAssets
+          .map(asset => ASSET_TO_CURRENCY_CODE[asset])
+          .filter(code => code !== undefined)
+      : ['BTC', 'ETH']; // Default to major coins
     
     const params: any = {
-      filter: 'hot', // hot, rising, or bullrun
-      currencies: currencyCodes, // Personalized based on user preferences
+      filter: 'hot',
+      // Don't filter by currencies in API - fetch more articles and filter client-side
     };
 
-    // Add API key if configured (required for API access)
+    // Add API key if configured
     if (apiKey && apiKey !== 'your-cryptopanic-api-key-here') {
       params.auth_token = apiKey;
     } else {
-      // If no API key, use public endpoint
       params.public = true;
     }
 
+    // Make ONLY 1 API call - fetch more articles to filter client-side
     const response = await axios.get(`${CRYPTOPANIC_API_BASE}/posts/`, {
       params,
       headers: {
         'User-Agent': 'AI-Crypto-Advisor/1.0',
       },
-      timeout: 10000, // 10 second timeout
+      timeout: 10000,
     });
 
-    const results = response.data.results || [];
-    return results.slice(0, limit).map((item: any) => ({
+    // Handle different response formats
+    let allResults: any[] = [];
+    if (Array.isArray(response.data)) {
+      allResults = response.data;
+    } else if (response.data?.results && Array.isArray(response.data.results)) {
+      allResults = response.data.results;
+    } else if (response.data?.data && Array.isArray(response.data.data)) {
+      allResults = response.data.data;
+    }
+    
+    // If no results from API, return fallback
+    if (allResults.length === 0) {
+      return getFallbackNews();
+    }
+    
+    // Filter articles to only include those matching user's currencies
+    let filteredResults = allResults.filter((item: any) => {
+      // If no currencies specified, include all
+      if (currencyCodes.length === 0) return true;
+      
+      // Check if article mentions any of the user's currencies
+      const itemCurrencies = item.currencies?.map((c: any) => c.code) || [];
+      return itemCurrencies.some((code: string) => currencyCodes.includes(code));
+    });
+    
+    // If filtering returned too few articles (< 5), include all articles to ensure we have content
+    if (filteredResults.length < 5 && allResults.length > 0) {
+      filteredResults = allResults;
+    }
+    
+    // Ensure we always return at least some articles
+    if (filteredResults.length === 0 && allResults.length > 0) {
+      filteredResults = allResults;
+    }
+    
+    // Return up to limit articles
+    return filteredResults.slice(0, limit).map((item: any) => ({
       id: item.id.toString(),
       title: item.title,
       url: item.url,
