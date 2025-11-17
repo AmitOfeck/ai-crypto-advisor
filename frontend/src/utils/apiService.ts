@@ -10,6 +10,10 @@ export const authAPI = {
     const response = await api.post('/auth/login', data);
     return response.data;
   },
+  validateToken: async () => {
+    const response = await api.get('/user/me');
+    return response.data;
+  },
 };
 
 // Onboarding APIs

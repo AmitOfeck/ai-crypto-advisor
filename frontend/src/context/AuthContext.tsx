@@ -24,15 +24,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored auth data
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    // Check for stored auth data and validate token
+    const validateAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+      if (storedToken && storedUser) {
+        try {
+          // Validate token by making an API call
+          const userData = await authAPI.validateToken();
+          // Token is valid, set user state
+          setToken(storedToken);
+          setUser(userData.user || JSON.parse(storedUser));
+        } catch (error: any) {
+          // Check if it's a network/CORS error (not a 401)
+          // If it's a network error, keep the token and let the API interceptor handle it
+          if (error.response?.status === 401) {
+            // Token is invalid or expired (401), clear auth data
+            console.warn('Token validation failed (401), clearing auth data');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setToken(null);
+            setUser(null);
+          } else {
+            // Network/CORS error - keep token, let subsequent API calls handle it
+            // This prevents clearing auth on intermittent CORS failures
+            console.warn('Token validation failed (network error), keeping token for now');
+            setToken(storedToken);
+            setUser(JSON.parse(storedUser));
+          }
+        }
+      }
+      setIsLoading(false);
+    };
+
+    validateAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
