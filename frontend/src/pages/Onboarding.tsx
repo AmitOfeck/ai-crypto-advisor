@@ -32,7 +32,6 @@ const Onboarding: React.FC = () => {
   const [interestedAssets, setInterestedAssets] = useState<string[]>([]);
   const [investorType, setInvestorType] = useState('');
   const [contentPreferences, setContentPreferences] = useState<string[]>([]);
-  const [customAsset, setCustomAsset] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -65,13 +64,6 @@ const Onboarding: React.FC = () => {
         ? prev.filter((p) => p !== pref)
         : [...prev, pref]
     );
-  };
-
-  const addCustomAsset = () => {
-    if (customAsset.trim() && !interestedAssets.includes(customAsset.trim())) {
-      setInterestedAssets((prev) => [...prev, customAsset.trim()]);
-      setCustomAsset('');
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,19 +120,6 @@ const Onboarding: React.FC = () => {
                     {asset}
                   </button>
                 ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customAsset}
-                  onChange={(e) => setCustomAsset(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomAsset())}
-                  placeholder="Add custom asset..."
-                  className="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <Button type="button" onClick={addCustomAsset} variant="outline">
-                  Add
-                </Button>
               </div>
             </div>
           </Card>
