@@ -55,6 +55,14 @@ export const getCoinPrices = async (
   currency: string = 'usd'
 ): Promise<CoinPrice[]> => {
   try {
+    const apiKey = process.env.COINGECKO_API_KEY;
+    const headers: any = {};
+    
+    // Add API key header if available
+    if (apiKey && apiKey !== 'your-coingecko-api-key-here') {
+      headers['x-cg-demo-api-key'] = apiKey;
+    }
+    
     const response = await axios.get(`${COINGECKO_API_BASE}/coins/markets`, {
       params: {
         vs_currency: currency,
@@ -63,6 +71,7 @@ export const getCoinPrices = async (
         page: 1,
         sparkline: false,
       },
+      headers,
     });
 
     return response.data.map((coin: any) => ({
@@ -97,8 +106,17 @@ export const getSpecificCoinPrices = async (
     // Convert display names to CoinGecko IDs
     const coinIds = coinNamesOrIds.map(mapDisplayNameToCoinId);
     
+    const apiKey = process.env.COINGECKO_API_KEY;
+    const headers: any = {};
+    
+    // Add API key header if available
+    if (apiKey && apiKey !== 'your-coingecko-api-key-here') {
+      headers['x-cg-demo-api-key'] = apiKey;
+    }
+    
     console.log('[CoinGecko] Requesting prices for:', coinNamesOrIds);
     console.log('[CoinGecko] Mapped IDs:', coinIds);
+    console.log('[CoinGecko] Using API key:', apiKey ? 'Yes' : 'No');
     
     const response = await axios.get(`${COINGECKO_API_BASE}/coins/markets`, {
       params: {
@@ -107,6 +125,7 @@ export const getSpecificCoinPrices = async (
         order: 'market_cap_desc',
         sparkline: false,
       },
+      headers,
       timeout: 15000, // 15 second timeout
     });
 
