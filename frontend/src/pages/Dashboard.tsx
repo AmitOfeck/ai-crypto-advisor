@@ -374,14 +374,14 @@ const Dashboard: React.FC = () => {
                           href={news.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 group h-fit"
+                          className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 group h-fit cursor-pointer"
                         >
                           {NewsContent}
                         </a>
                       ) : (
                         <div
                           key={news.id}
-                          className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg border border-slate-700/30 h-fit"
+                          className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-slate-600/50 h-fit"
                         >
                           {NewsContent}
                         </div>
