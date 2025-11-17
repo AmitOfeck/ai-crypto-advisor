@@ -118,9 +118,9 @@ const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-950">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
           <p className="text-slate-400">Loading your dashboard...</p>
         </div>
       </div>
@@ -129,7 +129,7 @@ const Dashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-950">
         <Card>
           <div className="text-center">
             <p className="text-red-400 mb-4">{error}</p>
@@ -149,22 +149,22 @@ const Dashboard: React.FC = () => {
   const shouldShowSection = (section: string) => contentPreferences.includes(section);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Modern Header with Glassmorphism */}
-      <header className="bg-slate-800/30 backdrop-blur-xl border-b border-slate-700/30 sticky top-0 z-50 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-950">
+      {/* Neon Cyber Header with Glow Effects */}
+      <header className="bg-slate-900/40 backdrop-blur-xl border-b border-cyan-500/20 sticky top-0 z-50 shadow-lg shadow-cyan-500/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center shadow-lg shadow-cyan-500/50">
                 <span className="text-white font-bold text-lg">AI</span>
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-teal-400 to-amber-400 bg-clip-text text-transparent">
                 Crypto Advisor
               </h1>
             </div>
             <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-700/50 rounded-lg">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-800/60 rounded-lg border border-cyan-500/20">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-sm shadow-cyan-400/50"></div>
                 <span className="text-slate-300 text-sm">Welcome, {user?.name}</span>
               </div>
               <Button variant="ghost" size="sm" onClick={logout}>
@@ -192,21 +192,21 @@ const Dashboard: React.FC = () => {
                   />
                 )
               }
-              className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border-indigo-500/30 h-full"
+              className="bg-gradient-to-br from-cyan-900/20 to-teal-900/20 border-cyan-500/30 h-full shadow-lg shadow-cyan-500/10"
             >
               {dashboardData.aiInsight && (
                 <div className="space-y-3 flex flex-col h-full">
                   <p className="text-slate-200 text-base sm:text-lg leading-relaxed flex-grow">
                     {dashboardData.aiInsight.content}
                   </p>
-                  <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-400 pt-3 border-t border-slate-700/50">
-                    <span className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-                      {dashboardData.aiInsight.model || 'AI'}
-                    </span>
-                    <span>•</span>
-                    <span>{formatDate(dashboardData.aiInsight.generatedAt)}</span>
-                  </div>
+                    <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-400 pt-3 border-t border-slate-700/50">
+                      <span className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-sm shadow-cyan-400/50"></span>
+                        {dashboardData.aiInsight.model || 'AI'}
+                      </span>
+                      <span>•</span>
+                      <span>{formatDate(dashboardData.aiInsight.generatedAt)}</span>
+                    </div>
                 </div>
               )}
             </Card>
@@ -290,14 +290,14 @@ const Dashboard: React.FC = () => {
                     {dashboardData.coinPrices.map((coin) => (
                       <div
                         key={coin.id}
-                        className="flex items-center justify-between p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 group"
+                        className="flex items-center justify-between p-3 sm:p-4 bg-slate-800/40 rounded-lg hover:bg-slate-800/60 transition-all duration-200 border border-slate-700/30 hover:border-cyan-500/40 hover:shadow-md hover:shadow-cyan-500/20 group"
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
                           <div className="relative">
                             <img
                               src={coin.image}
                               alt={coin.name}
-                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-2 ring-slate-600 group-hover:ring-indigo-400 transition-all"
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-2 ring-slate-600 group-hover:ring-cyan-400 transition-all shadow-sm group-hover:shadow-cyan-400/30"
                             />
                           </div>
                           <div>
@@ -314,7 +314,7 @@ const Dashboard: React.FC = () => {
                           <p
                             className={`text-xs sm:text-sm font-medium ${
                               coin.price_change_percentage_24h >= 0
-                                ? 'text-green-400'
+                                ? 'text-amber-400'
                                 : 'text-red-400'
                             }`}
                           >
@@ -358,7 +358,7 @@ const Dashboard: React.FC = () => {
                     {dashboardData.marketNews.map((news) => {
                       const NewsContent = (
                         <>
-                          <h4 className={`font-semibold text-slate-100 text-sm sm:text-base mb-2 line-clamp-2 ${news.url ? 'group-hover:text-indigo-400 transition-colors' : ''}`}>
+                          <h4 className={`font-semibold text-slate-100 text-sm sm:text-base mb-2 line-clamp-2 ${news.url ? 'group-hover:text-cyan-400 transition-colors' : ''}`}>
                             {news.title}
                           </h4>
                           <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
@@ -371,7 +371,7 @@ const Dashboard: React.FC = () => {
                               {news.currencies.slice(0, 3).map((curr) => (
                                 <span
                                   key={curr.code}
-                                  className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded text-xs font-medium"
+                                  className="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 rounded text-xs font-medium border border-cyan-500/30"
                                 >
                                   {curr.code}
                                 </span>
@@ -387,7 +387,7 @@ const Dashboard: React.FC = () => {
                           href={news.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block p-3 sm:p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 group h-fit cursor-pointer"
+                          className="block p-3 sm:p-4 bg-slate-800/40 rounded-lg hover:bg-slate-800/60 transition-all duration-200 border border-slate-700/30 hover:border-cyan-500/40 hover:shadow-md hover:shadow-cyan-500/20 group h-fit cursor-pointer"
                         >
                           {NewsContent}
                         </a>
