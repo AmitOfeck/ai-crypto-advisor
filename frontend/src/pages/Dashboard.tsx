@@ -68,6 +68,19 @@ const Dashboard: React.FC = () => {
 
         // Load dashboard data
         const response = await dashboardAPI.getDashboard();
+
+        // TEMPORARY: Log market news to inspect structure
+        console.log('=== Dashboard Response ===');
+        console.log('Full response:', response);
+        console.log('Market News:', response.marketNews);
+        if (response.marketNews && response.marketNews.length > 0) {
+          console.log('First article:', response.marketNews[0]);
+          console.log('First article keys:', Object.keys(response.marketNews[0]));
+          console.log('First article URL field:', response.marketNews[0].url);
+          console.log('First article full structure:', JSON.stringify(response.marketNews[0], null, 2));
+        }
+        console.log('==========================');
+
         setDashboardData(response);
       } catch (err: any) {
         setError(err.response?.data?.error || 'Failed to load dashboard');
