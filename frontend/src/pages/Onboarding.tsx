@@ -109,11 +109,11 @@ const Onboarding: React.FC = () => {
                     type="button"
                     onClick={() => toggleAsset(asset)}
                     className={`
-                      px-4 py-2 rounded-lg font-medium transition-all
+                      px-4 py-2 rounded-lg font-medium transition-all ring-2
                       ${
                         interestedAssets.includes(asset)
-                          ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/50'
-                          : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 border border-slate-700/50'
+                          ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/50 ring-cyan-400 border border-transparent'
+                          : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 ring-transparent border border-slate-700/50'
                       }
                     `}
                   >
@@ -133,11 +133,11 @@ const Onboarding: React.FC = () => {
                   type="button"
                   onClick={() => setInvestorType(type)}
                   className={`
-                    px-4 py-3 rounded-lg font-medium transition-all text-left
+                    px-4 py-3 rounded-lg font-medium transition-all text-left ring-2
                     ${
                       investorType === type
-                        ? 'bg-cyan-600 text-white shadow-lg ring-2 ring-cyan-400 shadow-cyan-500/50'
-                        : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 border border-slate-700/50'
+                        ? 'bg-cyan-600 text-white shadow-lg ring-cyan-400 shadow-cyan-500/50 border border-transparent'
+                        : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 ring-transparent border border-slate-700/50'
                     }
                   `}
                 >
@@ -156,11 +156,11 @@ const Onboarding: React.FC = () => {
                   type="button"
                   onClick={() => toggleContentPreference(pref)}
                   className={`
-                    px-4 py-3 rounded-lg font-medium transition-all
+                    px-4 py-3 rounded-lg font-medium transition-all ring-2
                     ${
                       contentPreferences.includes(pref)
-                        ? 'bg-teal-600 text-white shadow-lg ring-2 ring-teal-400 shadow-teal-500/50'
-                        : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 border border-slate-700/50'
+                        ? 'bg-teal-600 text-white shadow-lg ring-teal-400 shadow-teal-500/50 border border-transparent'
+                        : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800/80 ring-transparent border border-slate-700/50'
                     }
                   `}
                 >
