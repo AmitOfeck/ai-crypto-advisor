@@ -35,7 +35,7 @@ npm run install:all
    Copy the example file and configure:
    ```bash
    cd backend
-   cp .env.example .env
+   cp .env
    ```
 
    Edit `.env` and set:
@@ -50,7 +50,7 @@ npm run install:all
    Copy the example file:
    ```bash
    cd frontend
-   cp .env.example .env
+   cp .env
    ```
 
    Edit `.env` and set:
